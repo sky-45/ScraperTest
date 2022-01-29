@@ -1,0 +1,10 @@
+{
+    "name": "Scraper 2",
+    "description": "Build an Extension!",
+    "version": "1.0",
+    "manifest_version": 3,
+    "permissions": ["storage", "activeTab", "scripting"],
+    "action": {
+        "default_popup": "./App/index.html"
+      }
+  }
