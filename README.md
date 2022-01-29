@@ -1,2 +1,2 @@
 # ScraperTest
-test de un scraper
+Scrapper basico para obtener perfiles de LinkedIn
