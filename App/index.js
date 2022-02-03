@@ -1,3 +1,4 @@
+
 let btnScrapper = document.getElementById("btnScrapper");
 
 btnScrapper.addEventListener('click',async () => {
@@ -11,9 +12,50 @@ btnScrapper.addEventListener('click',async () => {
 })
 
 async function scrapProfileLinkedin() {
-    // getting data
+  
+  // Defininf class
+  class Profile {
+    cssselectors = {
+        name:'h1',
+        contactCard:{
+          profileUrl:'.ci-vanity-url > .pv-contact-info__ci-container > .pv-contact-info__contact-link',
+          email:'.ci-email > .pv-contact-info__ci-container > .pv-contact-info__contact-link'
+  
+        }
+      }
+    async #wait(seconds){
+      return new Promise(function(resolve,reject){
+        setTimeout(function(){
+          resolve()
+        },seconds*1000)
+      })
+    }
+  
+    async getContactCard(){
+        const {profileUrl,email} = this.cssselectors.contactCard;
+        document.getElementById("top-card-text-details-contact-info").click();
+        await this.#wait(0.5);
+        const profileUrlElement = await document.querySelector(String(profileUrl))?.innerText;
+        const emailLinkElement = await document.querySelector(String(email))?.innerText;
+        const [closeButton] = document.getElementsByClassName('artdeco-button');
+        await closeButton.click();
+        await this.#wait(1);
+  
+        return  {
+                  profileUrl: profileUrlElement,
+                  email: emailLinkElement
+                }
+      }
+  }
+  
+  // getting data
     const cssselectors = {
-      name:'h1'
+      name:'h1',
+      contactCard:{
+        profileUrl:'.ci-vanity-url > .pv-contact-info__ci-container > .pv-contact-info__contact-link',
+        email:'.ci-email > .pv-contact-info__ci-container > .pv-contact-info__contact-link'
+
+      }
     }
 
     async function wait(seconds){
@@ -46,17 +88,24 @@ async function scrapProfileLinkedin() {
       const nameElement = document.querySelector(name);
       
       const urlProfile = window.location.href;
-      console.log(urlProfile)
       return  {
                 name: nameElement?.textContent,
                 url: urlProfile
               }
     }
-    const info = getContactInfo();
-    await autoscroll('body');
 
-    console.log(info);
+    //const info = getContactInfo();
+    //await autoscroll('body');
+    //await wait(0.5);
+    //const contact_Card = await getContactCard(); 
+    //await wait(0.5);
+    //console.log(contact_Card);
 
+
+    
+    const profile = new Profile();
+    const contact_Card = await profile.getContactCard();
+    console.log(contact_Card);
     
     //TODO: compelte rest of data parameters
 
