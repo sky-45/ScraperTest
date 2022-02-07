@@ -119,7 +119,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         }
         console.log(data_api)
         await wait(0.5);
-        await fetch('http://127.0.0.1:8000/data3/', {
+        await fetch('https://scrapbackendlnk.azurewebsites.net/data3/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
