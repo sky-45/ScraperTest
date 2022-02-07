@@ -3,7 +3,11 @@
     
     // ---------- PROPERTIES -------------------------
     cssselectors = {
-        name:'h1',
+        generalInfo:{
+            name:'h1',
+            title:'#main >section .pv-text-details__left-panel>div+div',
+            photouRL:'#main >section .pv-top-card--photo img'
+        },
         contactCard:{
           profileUrl:'.ci-vanity-url > .pv-contact-info__ci-container > .pv-contact-info__contact-link',
           email:'.ci-email > .pv-contact-info__ci-container > .pv-contact-info__contact-link',
@@ -11,9 +15,17 @@
           twitter:'.ci-twitter  .pv-contact-info__ci-container  .pv-contact-info__contact-link'
         },
         experience:{
-          expandButton:'pv-profile-section__see-more-inline',
-          experiencesSel:'main ul li'
+          expandButton:'#main #experience+div+div>div>a',
+          experiencesSel:'main div+div>div>div>ul>li',
+          backButton:'#main div button',
+          experiencesMainPage:'#main #experience+div+div> ul > li'
 
+        },
+        education:{
+            expandButton:'#main #education+div+div>div>a',
+            educationsSel:'main ul > li.pvs-list__paged-list-item',
+            backButton:'#main div button',
+            educationsMainPage:'#main #education+div+div> ul > li',
         }
     }
 
@@ -42,6 +54,19 @@
         window.scrollTo(0,newScrollTop);
         }
       }
+    async getGeneralInfo(){
+        const {name,title,photouRL} = this.cssselectors.generalInfo;
+        const nameElement = await document.querySelector(name)?.innerText;
+        const titleElement = await document.querySelector(title)?.innerText;
+        const pictureLinkElement = await document.querySelector(photouRL)?.src;
+        await Profile.wait(0.5);
+        return  {
+                name: nameElement,
+                title: titleElement,
+                photouRL: pictureLinkElement
+              }
+      
+    }
     
     async getContactCard(){
       //getting selectors
@@ -68,67 +93,161 @@
       }
     async getExperiences(){
       //getting selectors
-      const {expandButton,experiencesSel} = this.cssselectors.experience;
+      const {expandButton,experiencesSel,backButton,experiencesMainPage} = this.cssselectors.experience;
+      
+      //check if there's more experience than the default
+        const expandButtonElement = document.querySelector(expandButton);
+        await Profile.wait(0.5);
+      if(expandButtonElement){
+        await expandButtonElement.click();
+        await Profile.wait(0.5);
+        await Profile.autoscroll('body');
+        const experiencesElem = document.querySelectorAll(experiencesSel);
+        const listOfExps = [];
+        for (const exp of experiencesElem) {
+            if(exp.querySelectorAll('ul>li.pvs-list__paged-list-item').length>0){
+                //multiple experiences in same company
+                const miniexperiences = exp.querySelectorAll('ul>li.pvs-list__paged-list-item');
+                for (const miniexp of miniexperiences) {
+                    let position = miniexp.querySelector('.t-bold span')?.innerText;
+                    let company = exp.querySelector('.t-bold')?.innerText;
+                    let dateRange = miniexp.querySelector('div>div+div>div>a>span>span')?.innerText;
+                    let location = exp.querySelector('div >div+div>div >a>span+span>span ')?.innerText;
+                    await Profile.wait(0.5);
+                    listOfExps.push({
+                        position:position,
+                        company:company,
+                        dateRange:dateRange,
+                        location:location
+                    }) 
+                    await Profile.wait(0.5);
+                }
+            }
+            else{
+                const detailsCompanyElement = exp.querySelector('div>div+div');
+                let position = detailsCompanyElement.querySelector('.t-bold')?.innerText;
+                let company = detailsCompanyElement.querySelector('div>div+span>span')?.innerText;
+                let dateRange = detailsCompanyElement.querySelectorAll('div>div+span+span>span')[1]?.innerText;
+                let location = detailsCompanyElement.querySelector('div>div+span+span+span>span')?.innerText;
+                await Profile.wait(0.5);
+                listOfExps.push({
+                  position:position,
+                  company:company,
+                  dateRange:dateRange,
+                  location:location
+                }) 
+            }
+            
+         }
+          //closing experience page
+          await Profile.wait(1);
+        document.querySelector(backButton).click();
+        await Profile.wait(1);
+
+        return listOfExps;
+      }
+      else{
+        const experiencesElem = document.querySelectorAll(experiencesMainPage);
+        await Profile.wait(0.5);
+        const listOfExps = [];
+        for (const exp of experiencesElem) {
+            const detailsCompanyElement = exp.querySelector('div>div+div');
+            //getting details company
+            let position = detailsCompanyElement.querySelector('.t-bold')?.innerText;
+            let company = detailsCompanyElement.querySelector('div>div+span>span')?.innerText;
+            let dateRange = detailsCompanyElement.querySelectorAll('div>div+span+span>span')[1]?.innerText;
+            let location = detailsCompanyElement.querySelector('div>div+span+span+span>span')?.innerText;
+            await Profile.wait(0.5);
+            listOfExps.push({
+              position:position,
+              company:company,
+              dateRange:dateRange,
+              location:location
+            })
+         }
+        return listOfExps;
+      }
       //go to experience page
-      window.location = window.location.href+'details/experience/'
+      //window.location = window.location.href+'details/experience/'
 
         //const [expandButtonElement] = document.querySelector(expandButton);
         //if(expandButtonElement) expandButtonElement.click();
 
-      await Profile.wait(0.5);
-      //gettin array of experiences by company
-      const experiences = document.querySelectorAll(experiencesSel);
-      const listOfExps = [];
-      for (const exp of experiences) {
-        const detailsCompanyElement = exp.querySelector('a .pv-entity__summary-info');
-        //getting details company
-        let position = detailsCompanyElement.querySelector('h3')?.innerText;
-        let company = detailsCompanyElement.querySelector('.pv-entity__secondary-title')?.innerText;
-        let dateRange = detailsCompanyElement.querySelectorAll('.pv-entity__date-range>span')[1]?.innerText;
-        let location = detailsCompanyElement.querySelectorAll('.pv-entity__location>span')[1]?.innerText;
-        await Profile.wait(0.5);
-        listOfExps.push({
-          position:position,
-          company:company,
-          dateRange:dateRange,
-          location:location
-
-        })
-
-      }
-      return listOfExps;
+      //await Profile.wait(1);
 
 
     }
+    async getEducation(){
+        const { expandButton,educationsSel,backButton,educationsMainPage } = this.cssselectors.education;
+        const expandButtonElement = document.querySelector(expandButton);
+        await Profile.wait(0.5);
+        if(expandButtonElement){
+            await expandButtonElement.click();
+            await Profile.wait(0.5);
+            await Profile.autoscroll('body');
+            const educationsElem = document.querySelectorAll(educationsSel);
+            await Profile.wait(0.5);
+            const listOfEduc = [];
+            for (const exp of educationsElem) {
+                const detailsEducatioonElement = exp.querySelector('div>div+div');
+                //getting details company
+                let institution = detailsEducatioonElement.querySelector('.t-bold span')?.innerText;
+                let degree = detailsEducatioonElement.querySelector('div>div+div >div > a > span')?.innerText;
+                let dateRange = detailsEducatioonElement.querySelector('div>div+div >div > a > span+span')?.innerText;
+                await Profile.wait(0.5);
+                listOfEduc.push({
+                    institution:institution,
+                    degree:degree,
+                    dateRange:dateRange
+                }) 
+             }
+            await Profile.wait(1);
+            document.querySelector(backButton).click();
+            await Profile.wait(0.5);
+            return listOfEduc;
+        }
+        else{
+            const educationsElem = document.querySelectorAll(educationsMainPage);
+            await Profile.wait(0.5);
+            const listOfEduc = [];
+            for (const exp of educationsElem) {
+                const detailsEducatioonElement = exp.querySelector('div>div+div');
+                //getting details company
+                let institution = detailsEducatioonElement.querySelector('.t-bold span')?.innerText;
+                let degree = detailsEducatioonElement.querySelector('div>div+div >div > a > span')?.innerText;
+                let dateRange = detailsEducatioonElement.querySelector('div>div+div >div > a > span+span>span')?.innerText;
+                await Profile.wait(0.5);
+                listOfEduc.push({
+                    institution:institution,
+                    degree:degree,
+                    dateRange:dateRange
+                }) 
+             }
+             await Profile.wait(0.5);
+             return listOfEduc;
+        }
+    }
+
   }
 
   async function scrapProfile(){
 
     const profile = new Profile();
     await Profile.autoscroll('body');
+    const generalInformation = await profile.getGeneralInfo();
+    await Profile.wait(0.5);
     const contact_Card = await profile.getContactCard();
-    //const expList = await profile.getExperiences();
-          return {profilecard:contact_Card}
+    await Profile.wait(1);
+    const expList = await profile.getExperiences();
+    await Profile.wait(1);
+    const educList = await profile.getEducation();
+    await Profile.wait(1);
+    
+
+          return {generalInfo:generalInformation,profilecard:contact_Card,experiences:expList,education:educList}
   }
 
 
-/*   chrome.runtime.onConnect.addListener((port) =>{
-    console.log("connected");
-
-    port.onMessage.addListener(async (message) =>{
-        if(message.action == "scrapData"){
-            
-            await Profile.wait(0.5);
-            const data = await scrapProfile();
-            await Profile.wait(1);
-            port.postMessage({"action":"sendDataProfile","data":data});
-            
-        }
-        
-        return true;
-
-    });
-}); */
 
 
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
@@ -136,9 +255,9 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
     if(message.action == "scrapData"){
                 
-        await Profile.wait(1);
+        await Profile.wait(0.5);
         const data = await scrapProfile();
-        await Profile.wait(1);
+        await Profile.wait(0.5);
         chrome.runtime.sendMessage('dfdebnchipmdkkoecabkkkoefmdbpldn',{"action":"sendDataProfile","data":data}, function(response){
             //console.log("response,received");
             })

@@ -91,8 +91,8 @@ async function scrapProfileLinkedin() {
 
 
   const searchPageLK = new SearchPage();
-  const data = await searchPageLK.getPeopleByPage(2);
-  //console.log(data);
+  const data = await searchPageLK.getPeopleByPage(1);
+  console.log(data);
   
   chrome.runtime.sendMessage('dfdebnchipmdkkoecabkkkoefmdbpldn',{"action":"getLinks","data":data}, function(response){
   
